@@ -7,6 +7,15 @@ use graphics::{gl, gl::GLEnum, glrs, winit::{winit::console_log, winit}};
 
 use crate::helpers::JSObject;
 
+extern crate alloc;
+
+#[cfg(target_arch = "wasm32")]
+use lol_alloc::{FreeListAllocator, LockedAllocator};
+
+#[cfg(target_arch = "wasm32")]
+#[global_allocator]
+static ALLOCATOR: LockedAllocator<FreeListAllocator> = LockedAllocator::new(FreeListAllocator::new());
+
 #[no_mangle]
 pub extern "C" fn main() {
     console_log("Hello, world!");

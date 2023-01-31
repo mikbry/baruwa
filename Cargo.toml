@@ -5,6 +5,7 @@ edition = "2021"
 authors = ["Mik Bry <mbry@miklabs.com>"]
 
 [dependencies]
+lol_alloc = "0.3.0"
 
 [lib]
 crate-type = ["cdylib"]
