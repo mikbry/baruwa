@@ -12,6 +12,7 @@ const setup = (wasm) => {
         setup,
         create_buffer: () => wasm().jsObjects.push(gl.createBuffer()) - 1,
         bind_buffer: (gl_enum, id) => {
+            console.log('bindBuffer', id);
             gl.bindBuffer(gl_enum, wasm().jsObjects[id]);
         },
         buffer_data_f32: (target, pointer, length, usage) => {
@@ -37,6 +38,7 @@ const setup = (wasm) => {
             gl.linkProgram(wasm().jsObjects[program]);
         },
         use_program: (program) => {
+            console.log('glProgram', program, wasm().jsObjects[program]);
             gl.useProgram(wasm().jsObjects[program]);
         },
         get_attrib_location: (program, pointer, length) => {

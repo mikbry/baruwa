@@ -1,13 +1,13 @@
 //
 import setupWebGL from './webgl.js';
 
-const startMainLoop = (wasm, _callback) => {
+const startMainLoop = (wasm) => {
     const { main_loop } =  wasm.instance.exports;
-    console.log("start main_loop=", main_loop, wasm, _callback);
-    let callback = _callback;
+    console.log("start main_loop=", main_loop, wasm);
     const update = () => {
-        console.log("js main_loop=", callback, main_loop);
-        callback = main_loop(callback);
+        console.log("js main_loop=", main_loop);
+        main_loop();
+        console.log('hop');
         window.requestAnimationFrame(update);
     };
     update();
@@ -31,7 +31,7 @@ const consoleLog = (wasm, pointer, length) => {
         env: {
             memory: new WebAssembly.Memory({ initial: 256 }),
             consoleLog: (pointer, length) => consoleLog(wasm, pointer, length),
-            startMainLoop: (callback) => startMainLoop(wasm, callback),
+            startMainLoop: () => startMainLoop(wasm),
             ...webGL,
         }
     };

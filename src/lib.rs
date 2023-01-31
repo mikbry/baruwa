@@ -1,7 +1,11 @@
 mod graphics;
 mod helpers;
 
+use std::{rc::Rc, cell::RefCell};
+
 use graphics::{gl, gl::GLEnum, glrs, winit::{winit::console_log, winit}};
+
+use crate::helpers::JSObject;
 
 #[no_mangle]
 pub extern "C" fn main() {
@@ -11,9 +15,9 @@ pub extern "C" fn main() {
 
 unsafe fn start() {
     // Create the vertex buffer
-    let vertex_buffer = Box::new(gl::create_buffer());
-    let index_buffer = Box::new(gl::create_buffer());
-    gl::bind_buffer(GLEnum::ArrayBuffer, *vertex_buffer);
+    let vertex_buffer: JSObject = gl::create_buffer();
+    let index_buffer: JSObject = gl::create_buffer();
+    gl::bind_buffer(GLEnum::ArrayBuffer, vertex_buffer);
     glrs::buffer_data_f32(
         GLEnum::ArrayBuffer,
         &[-0.5, 0.5, 0.0, -0.5, -0.5, 0.0, 0.5, -0.5, 0.0],
@@ -21,13 +25,13 @@ unsafe fn start() {
     );
 
     // Create the index buffer
-    gl::bind_buffer(GLEnum::ElementArrayBuffer, *index_buffer);
+    gl::bind_buffer(GLEnum::ElementArrayBuffer, index_buffer);
     glrs::buffer_data_u16(GLEnum::ElementArrayBuffer, &[0, 1, 2], GLEnum::StaticDraw);
 
     // Create the vertex shader
-    let vertex_shader = Box::new(gl::create_shader(GLEnum::VertexShader));
+    let vertex_shader = gl::create_shader(GLEnum::VertexShader);
     glrs::shader_source(
-        *vertex_shader,
+        vertex_shader,
         r#"
                 attribute vec3 vertex_position;
     
@@ -36,7 +40,7 @@ unsafe fn start() {
                 }
             "#,
     );
-    gl::compile_shader(*vertex_shader);
+    gl::compile_shader(vertex_shader);
 
     // Create the fragment shader
     let fragment_shader = gl::create_shader(GLEnum::FragmentShader);
@@ -51,7 +55,7 @@ unsafe fn start() {
 
     // Create the shader program
     let shader_program = gl::create_program();
-    gl::attach_shader(shader_program, *vertex_shader);
+    gl::attach_shader(shader_program, vertex_shader);
     gl::attach_shader(shader_program, fragment_shader);
     gl::link_program(shader_program);
 
@@ -65,18 +69,19 @@ unsafe fn start() {
     gl::enable_vertex_attrib_array(*attrib_location.to_owned());
     gl::vertex_attrib_pointer(*attrib_location.to_owned() as u32, 3, GLEnum::Float, false, 0, 0);
 
-    winit::set_main_loop(&|| {
+    let state = Rc::new(RefCell::new(shader_program));
+    winit::set_main_loop(Box::new(move || {
+        console_log("refresh");
         unsafe {
             gl::clear_color(0.3765, 0.3137, 0.8627, 1.0);
             gl::clear(GLEnum::ColorBufferBit);
-
-            // gl::use_program(shader_program);
-            /* gl::bind_buffer(GLEnum::ArrayBuffer, *vertex_buffer);
-            gl::bind_buffer(GLEnum::ElementArrayBuffer, *index_buffer);
-
-            gl::draw_elements(GLEnum::Triangles, 3, GLEnum::UnsignedShort, 0); */
+            let shader_program = state.borrow_mut();
+            gl::use_program(*shader_program);
+            // gl::bind_buffer(GLEnum::ArrayBuffer, vertex_buffer);
+            // gl::bind_buffer(GLEnum::ElementArrayBuffer, index_buffer);
+            gl::draw_elements(GLEnum::Triangles, 3, GLEnum::UnsignedShort, 0);
         }
         console_log("update");
-    });
+    }));
 }
 
